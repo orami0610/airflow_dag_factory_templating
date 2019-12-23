@@ -1,0 +1,6 @@
+owner: 'oswald'
+schedule_interval: "@daily"
+dag_id: templated_ent_cbs_ad_summary_loads
+dag_description: Testing templating with Jinja
+rm_sql_file_path: entertainment/ent_cbs_ad_summary_loads/sql/rm_pt_cbs_dfp_ad_summ_day.sql
+insert_sql_file_path: entertainment/ent_cbs_ad_summary_loads/sql/insert_pt_cbs_dfp_ad_summ_day.sql

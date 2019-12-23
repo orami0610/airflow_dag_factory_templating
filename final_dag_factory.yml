@@ -1,0 +1,35 @@
+default:
+  default_args:
+    owner: "oswald"
+    start_date: 2020-01-01
+  max_active_runs: 1
+  schedule_interval: "@daily"
+
+templated_ent_cbs_ad_summary_loads:
+  default_args:
+  description: "Test"
+  tasks:
+    start_task:
+      operator: airflow.operators.dummy_operator.DummyOperator
+      depends_on_past: false
+    check_cs_events:
+      operator: airflow.operators.python_operator.PythonOperator
+      python_callable_name: check_cs_events
+      python_callable_file: /usr/local/airflow/dags/common_lib/catalog_service_jobs.py
+      dependencies: [start_task]
+    rm_summary_table_data:
+      operator: airflow.contrib.operators.bigquery_operator.BigQueryOperator
+      sql: /usr/local/airflow/dags/entertainment/ent_cbs_ad_summary_loads/sql/rm_pt_cbs_dfp_ad_summ_day.sql
+      dependencies: [check_cs_events]
+    insert_summary_table_data:
+      operator: airflow.contrib.operators.bigquery_operator.BigQueryOperator
+      sql: /usr/local/airflow/dags/entertainment/ent_cbs_ad_summary_loads/sql/insert_pt_cbs_dfp_ad_summ_day.sql
+      dependencies: [rm_summary_table_data]
+    gen_cs_event:
+      operator: airflow.operators.python_operator.PythonOperator
+      python_callable_name: gen_cs_event
+      python_callable_file: /usr/local/airflow/dags/common_lib/catalog_service_jobs.py
+      dependencies: [insert_summary_table_data]
+    end_task:
+      operator: airflow.operators.dummy_operator.DummyOperator
+      dependencies: [gen_cs_event]
