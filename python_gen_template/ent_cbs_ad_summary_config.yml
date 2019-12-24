@@ -1,0 +1,73 @@
+owner: 'oswald'
+schedule_interval: "@daily"
+dag_id: templated_ent_cbs_ad_summary_loads
+dag_description: Testing templating with Jinja
+default_args:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+  - key:
+    value:
+params:
+  - key: APP_DIR
+    value: APP_DIR
+  - key: ROOT_DIR
+    value: ROOT_DIR
+  - key: TEMP_DIR
+    value: TEMP_DIR
+  - key: GCP_SERVICE_ACCOUNT_KEY
+    value: GCP_SERVICE_ACCOUNT_KEY
+  - key: GC_BQ_PROJECT
+    value: GC_BQ_PROJECT
+  - key: GC_BQ_DATASET
+    value: GC_BQ_DATASET
+  - key: SRC_TABLE_1
+    value: SRC_TABLE_1
+  - key: DEST_TABLE_1
+    value: DEST_TABLE_1
+  - key: DATE_FILTER
+    value: DATE_FILTER
+  - key: DAY_DT_NODASH
+    value: day_dt_nodash
+  - key: DAY_DT_DASH
+    value: day_dt_dash
+events:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+  - tablename:
+    active:
+rm_sql_file_path: entertainment/ent_cbs_ad_summary_loads/sql/rm_pt_cbs_dfp_ad_summ_day.sql
+insert_sql_file_path: entertainment/ent_cbs_ad_summary_loads/sql/insert_pt_cbs_dfp_ad_summ_day.sql
