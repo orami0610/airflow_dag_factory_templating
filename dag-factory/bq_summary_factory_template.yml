@@ -17,14 +17,21 @@ default:
       python_callable_name: check_cs_events
       python_callable_file: /usr/local/airflow/dags/common_lib/catalog_service_jobs.py
       dependencies: [start_task]
-    rm_summary_table_data:
+    {% for bq_task in bq_tasks %}
+    {{ bq_task['task_name'] }}:
       operator: airflow.contrib.operators.bigquery_operator.BigQueryOperator
-      sql: /usr/local/airflow/dags/{{ rm_sql_file_path }}
-      dependencies: [check_cs_events]
-    insert_summary_table_data:
-      operator: airflow.contrib.operators.bigquery_operator.BigQueryOperator
-      sql: /usr/local/airflow/dags/{{ insert_sql_file_path }}
-      dependencies: [rm_summary_table_data]
+      sql: /usr/local/airflow/dags/{{ bq_task['sql_file_path'] }}
+      params: {{  params }}
+      dependencies: [{{ bq_task['dependencies'] }}]
+    {% endfor %}
+    {% for py_task in py_tasks %}
+    {{ py_task['task_name'] }}:
+      operator: airflow.operators.python_operator.PythonOperator
+      python_callable_name: {{ py_task['python_callable'] }}
+      python_callable_file: /usr/local/airflow/dags/{{ py_task['py_callable'] }}
+      params: {{ params }}
+      dependencies: [{{ py_task['dependencies'] }}]
+    {% endfor %}
     gen_cs_event:
       operator: airflow.operators.python_operator.PythonOperator
       python_callable_name: gen_cs_event
