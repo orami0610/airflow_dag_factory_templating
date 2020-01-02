@@ -3,26 +3,24 @@ schedule_interval: "@daily"
 dag_id: templated_ent_cbs_ad_summary_loads
 dag_description: Testing templating with Jinja
 default_args:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
-  - key:
-    value:
+  - key: 'owner'
+    value: 'oswald'
+  - key: 'depends_on_past'
+    value: False
+  - key: 'email'
+    value: 'oswald.ramirez@cbsinteractive.com'
+  - key: 'email_on_failure'
+    value: True
+  - key: 'email_on_retry'
+    value: False
+  - key: 'retries'
+    value: 3
+  - key: 'retry_delay'
+    value: timedelta(minutes=5)
+  - key: 'max_active_runs'
+    value: 1
+  - key: 'catchup'
+    value: False
 params:
   - key: APP_DIR
     value: APP_DIR
@@ -47,27 +45,41 @@ params:
   - key: DAY_DT_DASH
     value: day_dt_dash
 events:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-  - tablename:
-    active:
-rm_sql_file_path: entertainment/ent_cbs_ad_summary_loads/sql/rm_pt_cbs_dfp_ad_summ_day.sql
-insert_sql_file_path: entertainment/ent_cbs_ad_summary_loads/sql/insert_pt_cbs_dfp_ad_summ_day.sql
+  - tablename: swh_pt.pt_capacity_day
+    active: False
+  - tablename: awh_pt.xfp_event_actvw_late_arriving
+    active: False
+  - tablename: awh_pt.xfp_event_actvw_same_day
+    active: False
+  - tablename: awh_pt.xfp_event_bkfl_late_arriving
+    active: False
+  - tablename: awh_pt.xfp_event_bkfl_same_day
+    active: False
+  - tablename: awh_pt.xfp_event_bkflclk_late_arriving
+    active: False
+  - tablename: awh_pt.xfp_event_bkflclk_same_day
+    active: False
+  - tablename: awh_pt.xfp_event_clk_late_arriving
+    active: False
+  - tablename: awh_pt.xfp_event_clk_same_day
+    active: False
+  - tablename: awh_pt.xfp_event_imp_late_arriving
+    active: False
+  - tablename: awh_pt.xfp_event_imp_same_day
+    active: False
+  - tablename: awh_pt.xfp_event_video_late_arriving
+    active: False
+  - tablename: awh_pt.xfp_event_video_same_day
+    active: False
+bq_tasks:
+  - task_name: rm_summ_table_data
+    task_id: rm_summ_table_data
+    write_disposition: WRITE_APPEND
+    sql_filename: entertainment/ent_cbs_ad_summary_loads/sql/rm_pt_cbs_dfp_ad_summ_day.sql
+  - task_name: insert_summ_table_data
+    task_id: insert_summ_table_data
+    write_disposition: WRITE_APPEND
+    sql_filename: entertainment/ent_cbs_ad_summary_loads/sql/insert_pt_cbs_dfp_ad_summ_day.sql
+cs_done_event_nm: ent_cbs_ad_summary_done
+cs_done_event_desc: BQ Summary for ENT CBS Ad Summary Done
+dag_dep_list: rm_summ_table_data >> insert_summ_table_data

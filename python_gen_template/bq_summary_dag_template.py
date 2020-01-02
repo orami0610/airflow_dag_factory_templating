@@ -105,7 +105,7 @@ def check_catalog_service(yesterday_ds, ds, **kwargs):
         return 'slack_notify_failed'
 
 
-with DAG(dag_id=DAG_ID, schedule_interval={{ schedule_interval }}, default_args=default_args) as dag:
+with DAG(dag_id=DAG_ID, schedule_interval="{{ schedule_interval }}", default_args=default_args) as dag:
 
     start_task = DummyOperator(task_id='start_task', retries=2, depends_on_past=False)
     end_task = DummyOperator(task_id='end_task', trigger_rule=TriggerRule.ALL_SUCCESS)
@@ -116,36 +116,27 @@ with DAG(dag_id=DAG_ID, schedule_interval={{ schedule_interval }}, default_args=
         python_callable=check_catalog_service,
         params={"table_names": {
                 {% for event in events -%}
-                event['tablename']: event['active'],
-                {% endfor %},
+                "{{ event['tablename'] }}": {{ event['active'] }},
+                {% endfor %}
+                },
                 "run_task": "rm_dfp_ad_summ_day"},
         on_failure_callback=slack_failed_task,
     )
+    {% for bq_task in bq_tasks %}
 
-    rm_summ_table_data = BigQueryOperator(
-        task_id='rm_summ_table_data',
+    {{ bq_task['task_name'] }} = BigQueryOperator(
+        task_id="{{ bq_task['task_id'] }}",
         use_legacy_sql=False,
         allow_large_results=True,
-        sql='sql/{{ rm_sql_filename }}.sql',
+        write_disposition="{{ bq_task['write_disposition'] }}",
+        sql="sql/{{ bq_task['sql_filename'] }}.sql",
         params=params,
         bigquery_conn_id=BQ_CONNECTION_ID,
         on_failure_callback=slack_failed_task,
         depends_on_past=True
     )
 
-    insert_summ_table_data = BigQueryOperator(
-        task_id='insert_summ_table_data',
-        use_legacy_sql=False,
-        write_disposition='WRITE_APPEND',
-        allow_large_results=True,
-        sql='sql/{{ insert_sql_filename }}.sql',
-        params=params,
-        bigquery_conn_id=BQ_CONNECTION_ID,
-        on_failure_callback=slack_failed_task,
-        depends_on_past=True ,
-        trigger_rule=TriggerRule.ONE_SUCCESS,
-    )
-
+    {% endfor %}
     gen_cs_done_event = PythonOperator(
         task_id='gen_cs_done_event',
         provide_context=True,
@@ -174,4 +165,4 @@ with DAG(dag_id=DAG_ID, schedule_interval={{ schedule_interval }}, default_args=
         trigger_rule=TriggerRule.ALL_SUCCESS
     )
 
-    start_task >> check_cs_events >> rm_summ_table_data >> insert_summ_table_data >> gen_cs_done_event >> slack_notify_done >> end_task
+    start_task >> check_cs_events >> {{ dag_dep_list }} >> gen_cs_done_event >> slack_notify_done >> end_task
